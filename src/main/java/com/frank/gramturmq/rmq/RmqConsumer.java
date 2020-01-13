@@ -19,6 +19,14 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 
+/**
+ * 中继服务.
+ *
+ * @author 张孝党 2020/01/13.
+ * @version V1.00.
+ * <p>
+ * 更新履历： V1.00 2020/01/13. 张孝党 创建.
+ */
 @Slf4j
 @Component
 public class RmqConsumer {

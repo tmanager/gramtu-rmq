@@ -40,7 +40,7 @@ public class SocketClient {
             // 建立客户端socket连接，指定服务器位置及端口
             Socket client = new Socket();
             SocketAddress socketAddress = new InetSocketAddress(strFesbIP, intPort);
-            client.connect(socketAddress, 10 * 10 * 1000);
+            client.connect(socketAddress, 30 * 10 * 1000);
             // 得到socket读写流
             OutputStream dos = client.getOutputStream();
             // 输入流

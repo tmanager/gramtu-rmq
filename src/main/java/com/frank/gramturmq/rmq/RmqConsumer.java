@@ -91,8 +91,9 @@ public class RmqConsumer {
                 // pdf报告路径
                 String pdfReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".pdf";
 
-                // 上传至FDFS
+                // 上传HTML报告至FDFS
                 responseTurnitinBean.setHtmlReportUrl(this.fdfsUtil.uploadLocalFile(new File(htmlReport)));
+                // 上传PDF报告至FDFS
                 responseTurnitinBean.setPdfReportUrl(this.fdfsUtil.uploadLocalFile(new File(pdfReport)));
             } else if (msgHeader.equals("13")) {
                 // html报告路径
@@ -100,8 +101,9 @@ public class RmqConsumer {
                 // pdf报告路径
                 String pdfReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".pdf";
 
-                // 上传至FDFS
+                // 上传HTML报告至FDFS
                 responseTurnitinBean.setHtmlReportUrl(this.fdfsUtil.uploadLocalFile(new File(htmlReport)));
+                // 上传PDF报告至FDFS
                 responseTurnitinBean.setPdfReportUrl(this.fdfsUtil.uploadLocalFile(new File(pdfReport)));
             }
             // 返回

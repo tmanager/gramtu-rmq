@@ -40,7 +40,7 @@ public class RmqConsumer {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @RabbitListener(queues = RmqConst.TOPIC_QUEUE)
+    @RabbitListener(queues = RmqConst.TOPIC_QUEUE, concurrency = "100")
     public String receiveTopic(String message) throws Exception {
 
         // 加载国际版账号信息

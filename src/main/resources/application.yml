@@ -7,8 +7,8 @@ spring:
     username: yfdev
     password: yfdev
     template:
-      receive-timeout: 60000
-      reply-timeout: 60000
+      receive-timeout: 1200000
+      reply-timeout: 1200000
   redis:
     host: 47.111.173.188
     port: 6379

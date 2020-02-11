@@ -13,8 +13,8 @@ import com.frank.gramturmq.utils.FileUtils;
 import com.frank.gramturmq.utils.SocketClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -37,10 +37,8 @@ public class RmqConsumer {
     @Autowired
     private RedisService redisService;
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
-
-    @RabbitListener(queues = RmqConst.TOPIC_QUEUE, concurrency = "100")
+    @Async
+    @RabbitListener(queues = RmqConst.TOPIC_QUEUE, containerFactory = "pointTaskContainerFactory")
     public String receiveTopic(String message) throws Exception {
 
         // 加载国际版账号信息

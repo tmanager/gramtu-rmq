@@ -24,20 +24,6 @@ public class RmqService {
     /**
      * 发送exchange消息.
      */
-    public Object rpcToGrammarly(String msg) {
-        log.info("*****************发送给grammarly的消息为：[{}]*****************", msg);
-
-        // 发送消息
-        Object response = this.rabbitTemplate.convertSendAndReceive(RmqConst.QUEUE_NAME_GRAMMARLY_CLIENT, msg);
-        log.info("*****************发送给grammarly的返回消息为：[{}]*****************", response);
-
-        return response;
-        //this.rabbitTemplate.convertAndSend(RmqConst.QUEUE_NAME_GRAMMARLY_CLIENT, msg);
-    }
-
-    /**
-     * 发送exchange消息.
-     */
     public Object rpcToTurnitin(String msg) {
         log.info("*****************发送给grammarly的消息为：[{}]*****************", msg);
 

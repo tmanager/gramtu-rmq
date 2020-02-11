@@ -37,8 +37,9 @@ public class RmqConsumer {
     @Autowired
     private RedisService redisService;
 
-    @Async
-    @RabbitListener(queues = RmqConst.TOPIC_QUEUE, containerFactory = "pointTaskContainerFactory")
+    @RabbitListener(
+            queues = RmqConst.TOPIC_QUEUE,
+            containerFactory = "pointTaskContainerFactory")
     public String receiveTopic(String message) throws Exception {
 
         // 加载国际版账号信息

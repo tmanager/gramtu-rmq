@@ -40,76 +40,84 @@ public class RmqConsumer {
     @RabbitListener(
             queues = RmqConst.TOPIC_QUEUE,
             containerFactory = "pointTaskContainerFactory")
-    public String receiveTopic(String message) throws Exception {
+    public String receiveTopic(String message) {
 
-        // 加载国际版账号信息
-        RequestTurnitinBean turnBean = JSONObject.parseObject(this.redisService.getStringValue(TurnitinConst.TURN_IN_KEY),
-                RequestTurnitinBean.class);
-        // 加载UK版账号信息
-        RequestTurnitinBean turnBeanUK = JSONObject.parseObject(this.redisService.getStringValue(TurnitinConst.TURN_IN_KEY),
-                RequestTurnitinBean.class);
+        try {
+            // 加载国际版账号信息
+            RequestTurnitinBean turnBean = JSONObject.parseObject(this.redisService.getStringValue(TurnitinConst.TURN_IN_KEY),
+                    RequestTurnitinBean.class);
+            // 加载UK版账号信息
+            RequestTurnitinBean turnBeanUK = JSONObject.parseObject(this.redisService.getStringValue(TurnitinConst.TURN_IN_KEY),
+                    RequestTurnitinBean.class);
 
-        log.info("接收的报文为：{}", message);
-        String msgHeader = message.substring(0, 2);
+            log.info("接收的报文为：{}", message);
+            String msgHeader = message.substring(0, 2);
 
-        // 国际版
-        if (msgHeader.equals("02") || msgHeader.equals("04")) {
-            RequestTurnitinBean msgBean = JSONObject.parseObject(message.substring(2),
-                    new TypeReference<RequestTurnitinBean>() {
-                    });
-            FileUtils.downloadFromHttpUrl(
-                    msgBean.getOriginalurl(),
-                    msgBean.getThesisVpnPath(),
-                    msgBean.getThesisName());
-        } else if (msgHeader.equals("12") || msgHeader.equals("14")) {
-            // UK版
-            RequestTurnitinBean msgBean = JSONObject.parseObject(message.substring(2),
-                    new TypeReference<RequestTurnitinBean>() {
-                    });
-            FileUtils.downloadFromHttpUrl(
-                    msgBean.getOriginalurl(),
-                    msgBean.getThesisVpnPath(),
-                    msgBean.getThesisName());
-        }
-
-        // 调用Socket服务
-        String repMsg = SocketClient.callServer(
-                TurnitinConst.SOCKET_SERVER,
-                TurnitinConst.SOCKET_PORT,
-                message);
-        ResponseTurnitinBean responseTurnitinBean = JSONObject.parseObject(repMsg, ResponseTurnitinBean.class);
-        log.info("调用Socket Server返回的结果为：\n{}", JSON.toJSONString(responseTurnitinBean, SerializerFeature.PrettyFormat));
-
-        // 成功时
-        if (responseTurnitinBean.getRetcode().equals("0000")) {
-            String thesisId = responseTurnitinBean.getThesisId();
-            // 下载报告时
-            if (msgHeader.equals("03")) {
-                // html报告路径
-                String htmlReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".html";
-                // pdf报告路径
-                String pdfReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".pdf";
-
-                // 上传HTML报告至FDFS
-                responseTurnitinBean.setHtmlReportUrl(this.fdfsUtil.uploadLocalFile(new File(htmlReport)));
-                // 上传PDF报告至FDFS
-                responseTurnitinBean.setPdfReportUrl(this.fdfsUtil.uploadLocalFile(new File(pdfReport)));
-            } else if (msgHeader.equals("13")) {
-                // html报告路径
-                String htmlReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".html";
-                // pdf报告路径
-                String pdfReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".pdf";
-
-                // 上传HTML报告至FDFS
-                responseTurnitinBean.setHtmlReportUrl(this.fdfsUtil.uploadLocalFile(new File(htmlReport)));
-                // 上传PDF报告至FDFS
-                responseTurnitinBean.setPdfReportUrl(this.fdfsUtil.uploadLocalFile(new File(pdfReport)));
+            // 国际版
+            if (msgHeader.equals("02") || msgHeader.equals("04")) {
+                RequestTurnitinBean msgBean = JSONObject.parseObject(message.substring(2),
+                        new TypeReference<RequestTurnitinBean>() {
+                        });
+                FileUtils.downloadFromHttpUrl(
+                        msgBean.getOriginalurl(),
+                        msgBean.getThesisVpnPath(),
+                        msgBean.getThesisName());
+            } else if (msgHeader.equals("12") || msgHeader.equals("14")) {
+                // UK版
+                RequestTurnitinBean msgBean = JSONObject.parseObject(message.substring(2),
+                        new TypeReference<RequestTurnitinBean>() {
+                        });
+                FileUtils.downloadFromHttpUrl(
+                        msgBean.getOriginalurl(),
+                        msgBean.getThesisVpnPath(),
+                        msgBean.getThesisName());
             }
-            // 返回
-            return JSON.toJSONString(responseTurnitinBean);
-        } else {
-            // 失败时
-            return repMsg;
+
+            // 调用Socket服务
+            String repMsg = SocketClient.callServer(
+                    TurnitinConst.SOCKET_SERVER,
+                    TurnitinConst.SOCKET_PORT,
+                    message);
+            ResponseTurnitinBean responseTurnitinBean = JSONObject.parseObject(repMsg, ResponseTurnitinBean.class);
+            log.info("调用Socket Server返回的结果为：\n{}", JSON.toJSONString(responseTurnitinBean, SerializerFeature.PrettyFormat));
+
+            // 成功时
+            if (responseTurnitinBean.getRetcode().equals("0000")) {
+                String thesisId = responseTurnitinBean.getThesisId();
+                // 下载报告时
+                if (msgHeader.equals("03")) {
+                    // html报告路径
+                    String htmlReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".html";
+                    // pdf报告路径
+                    String pdfReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".pdf";
+
+                    // 上传HTML报告至FDFS
+                    responseTurnitinBean.setHtmlReportUrl(this.fdfsUtil.uploadLocalFile(new File(htmlReport)));
+                    // 上传PDF报告至FDFS
+                    responseTurnitinBean.setPdfReportUrl(this.fdfsUtil.uploadLocalFile(new File(pdfReport)));
+                } else if (msgHeader.equals("13")) {
+                    // html报告路径
+                    String htmlReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".html";
+                    // pdf报告路径
+                    String pdfReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".pdf";
+
+                    // 上传HTML报告至FDFS
+                    responseTurnitinBean.setHtmlReportUrl(this.fdfsUtil.uploadLocalFile(new File(htmlReport)));
+                    // 上传PDF报告至FDFS
+                    responseTurnitinBean.setPdfReportUrl(this.fdfsUtil.uploadLocalFile(new File(pdfReport)));
+                }
+                // 返回
+                return JSON.toJSONString(responseTurnitinBean);
+            } else {
+                // 失败时
+                return repMsg;
+            }
+        }catch (Exception ex) {
+            log.info("有异常发生>>>>>>>>>>>>>>>>>:\n{}", ex.getMessage());
+            ResponseTurnitinBean rsp = new ResponseTurnitinBean();
+            rsp.setRetcode("9999");
+            rsp.setRetmsg("有异常发生！");
+            return JSON.toJSONString(rsp);
         }
     }
 }

@@ -9,11 +9,16 @@ spring:
     template:
       receive-timeout: 1200000
       reply-timeout: 1200000
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 5
   redis:
     host: 47.111.173.188
     port: 6379
     # 连接超时时间（毫秒）
-    timeout: 10000
+    timeout: 1200000
     # 最大空闲数
     lettuce:
       pool:
@@ -22,10 +27,10 @@ spring:
         # 连接池中的最大空闲连接 默认 8
         max-idle: 10
         # 连接池最大阻塞等待时间,单位毫秒（使用负值表示没有限制） 默认 -1
-        max-wait: 1000
+        max-wait: -1
         # 连接池中的最小空闲连接 默认 0
-        min-idle: 0
-      shutdown-timeout: 20000
+        min-idle: 10
+      shutdown-timeout: 1200000
 fdfs:
   # 读取超时
   so-timeout: 100000

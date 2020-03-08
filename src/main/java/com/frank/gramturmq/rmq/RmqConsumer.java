@@ -14,7 +14,6 @@ import com.frank.gramturmq.utils.SocketClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -34,28 +33,31 @@ public class RmqConsumer {
     @Autowired
     private FdfsUtil fdfsUtil;
 
-    @Autowired
-    private RedisService redisService;
+    //@Autowired
+    //private RedisService redisService;
 
     @RabbitListener(
             queues = RmqConst.TOPIC_QUEUE,
             containerFactory = "pointTaskContainerFactory")
     public String receiveTopic(String message) {
 
+        // 接收到的报文
+        RequestTurnitinBean msgBean = null;
+
         try {
-            // 加载国际版账号信息
-            RequestTurnitinBean turnBean = JSONObject.parseObject(this.redisService.getStringValue(TurnitinConst.TURN_IN_KEY),
-                    RequestTurnitinBean.class);
-            // 加载UK版账号信息
-            RequestTurnitinBean turnBeanUK = JSONObject.parseObject(this.redisService.getStringValue(TurnitinConst.TURN_IN_KEY),
-                    RequestTurnitinBean.class);
+//            // 加载国际版账号信息
+//            RequestTurnitinBean turnBean = JSONObject.parseObject(this.redisService.getStringValue(TurnitinConst.TURN_IN_KEY),
+//                    RequestTurnitinBean.class);
+//            // 加载UK版账号信息
+//            RequestTurnitinBean turnBeanUK = JSONObject.parseObject(this.redisService.getStringValue(TurnitinConst.TURN_IN_KEY),
+//                    RequestTurnitinBean.class);
 
             log.info("接收的报文为：{}", message);
             String msgHeader = message.substring(0, 2);
 
             // 国际版
             if (msgHeader.equals("02") || msgHeader.equals("04")) {
-                RequestTurnitinBean msgBean = JSONObject.parseObject(message.substring(2),
+                msgBean = JSONObject.parseObject(message.substring(2),
                         new TypeReference<RequestTurnitinBean>() {
                         });
                 FileUtils.downloadFromHttpUrl(
@@ -64,7 +66,7 @@ public class RmqConsumer {
                         msgBean.getThesisName());
             } else if (msgHeader.equals("12") || msgHeader.equals("14")) {
                 // UK版
-                RequestTurnitinBean msgBean = JSONObject.parseObject(message.substring(2),
+                msgBean = JSONObject.parseObject(message.substring(2),
                         new TypeReference<RequestTurnitinBean>() {
                         });
                 FileUtils.downloadFromHttpUrl(
@@ -86,20 +88,30 @@ public class RmqConsumer {
                 String thesisId = responseTurnitinBean.getThesisId();
                 // 下载报告时
                 if (msgHeader.equals("03")) {
+//                    // html报告路径
+//                    String htmlReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".html";
+//                    // pdf报告路径
+//                    String pdfReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".pdf";
+
                     // html报告路径
-                    String htmlReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".html";
+                    String htmlReport = msgBean.getReportVpnPath() + File.separator + thesisId + ".html";
                     // pdf报告路径
-                    String pdfReport = turnBean.getReportVpnPath() + File.separator + thesisId + ".pdf";
+                    String pdfReport = msgBean.getReportVpnPath() + File.separator + thesisId + ".pdf";
 
                     // 上传HTML报告至FDFS
                     responseTurnitinBean.setHtmlReportUrl(this.fdfsUtil.uploadLocalFile(new File(htmlReport)));
                     // 上传PDF报告至FDFS
                     responseTurnitinBean.setPdfReportUrl(this.fdfsUtil.uploadLocalFile(new File(pdfReport)));
                 } else if (msgHeader.equals("13")) {
+//                    // html报告路径
+//                    String htmlReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".html";
+//                    // pdf报告路径
+//                    String pdfReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".pdf";
+
                     // html报告路径
-                    String htmlReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".html";
+                    String htmlReport = msgBean.getReportVpnPath() + File.separator + thesisId + ".html";
                     // pdf报告路径
-                    String pdfReport = turnBeanUK.getReportVpnPath() + File.separator + thesisId + ".pdf";
+                    String pdfReport = msgBean.getReportVpnPath() + File.separator + thesisId + ".pdf";
 
                     // 上传HTML报告至FDFS
                     responseTurnitinBean.setHtmlReportUrl(this.fdfsUtil.uploadLocalFile(new File(htmlReport)));
@@ -112,7 +124,7 @@ public class RmqConsumer {
                 // 失败时
                 return repMsg;
             }
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             log.info("有异常发生>>>>>>>>>>>>>>>>>:\n{}", ex.getMessage());
             ResponseTurnitinBean rsp = new ResponseTurnitinBean();
             rsp.setRetcode("9999");

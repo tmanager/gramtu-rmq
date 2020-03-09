@@ -1,6 +1,8 @@
 server:
   port: 9999
 spring:
+  application:
+    name: gramtu-rabbitmq
   rabbitmq:
     host: 47.111.173.188
     port: 5672

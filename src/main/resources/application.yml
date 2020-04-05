@@ -16,6 +16,7 @@ spring:
           max-attempts: 5
   redis:
     host: 47.111.173.188
+    password: uPfel2NbpmHvAoDq
     port: 6379
     # 连接超时时间（毫秒）
     timeout: 1200000

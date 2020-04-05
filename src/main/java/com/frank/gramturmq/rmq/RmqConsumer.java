@@ -11,6 +11,7 @@ import com.frank.gramturmq.fdfs.FdfsUtil;
 import com.frank.gramturmq.redis.RedisService;
 import com.frank.gramturmq.utils.FileUtils;
 import com.frank.gramturmq.utils.SocketClient;
+import com.frank.gramturmq.utils.WordAnalyzeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,9 +53,10 @@ public class RmqConsumer {
             log.info("接收的报文为：{}", message);
             String msgHeader = message.substring(0, 2);
 
+            RequestTurnitinBean msgBean = null;
             // 国际版
             if (msgHeader.equals("02") || msgHeader.equals("04")) {
-                RequestTurnitinBean msgBean = JSONObject.parseObject(message.substring(2),
+                msgBean = JSONObject.parseObject(message.substring(2),
                         new TypeReference<RequestTurnitinBean>() {
                         });
                 FileUtils.downloadFromHttpUrl(
@@ -63,7 +65,7 @@ public class RmqConsumer {
                         msgBean.getThesisName());
             } else if (msgHeader.equals("12") || msgHeader.equals("14")) {
                 // UK版
-                RequestTurnitinBean msgBean = JSONObject.parseObject(message.substring(2),
+                msgBean = JSONObject.parseObject(message.substring(2),
                         new TypeReference<RequestTurnitinBean>() {
                         });
                 FileUtils.downloadFromHttpUrl(
@@ -72,13 +74,32 @@ public class RmqConsumer {
                         msgBean.getThesisName());
             }
 
-            // 调用Socket服务
-            String repMsg = SocketClient.callServer(
-                    TurnitinConst.SOCKET_SERVER,
-                    TurnitinConst.SOCKET_PORT,
-                    message);
-            ResponseTurnitinBean responseTurnitinBean = JSONObject.parseObject(repMsg, ResponseTurnitinBean.class);
-            log.info("调用Socket Server返回的结果为：\n{}", JSON.toJSONString(responseTurnitinBean, SerializerFeature.PrettyFormat));
+            // ADD BY zhangxd ON 20200309 START
+            // 论文大小转为本地计算
+            ResponseTurnitinBean responseTurnitinBean = null;
+            String repMsg = "";
+            // 计算论文大小时
+            if (msgHeader.equals("04") || msgHeader.equals("14")) {
+                responseTurnitinBean = new ResponseTurnitinBean();
+
+                boolean analyzeResult = WordAnalyzeUtil.calcWordCnt(
+                        responseTurnitinBean,
+                        msgBean.getThesisVpnPath(),
+                        msgBean.getThesisName());
+                if (!analyzeResult) {
+                    responseTurnitinBean.setRetcode("9999");
+                    responseTurnitinBean.setRetmsg("解析字数时异常，请联系客服!");
+                }
+            } else {
+                // 调用Socket服务
+                repMsg = SocketClient.callServer(
+                        TurnitinConst.SOCKET_SERVER,
+                        TurnitinConst.SOCKET_PORT,
+                        message);
+                responseTurnitinBean = JSONObject.parseObject(repMsg, ResponseTurnitinBean.class);
+                log.info("调用Socket Server返回的结果为：\n{}", JSON.toJSONString(responseTurnitinBean, SerializerFeature.PrettyFormat));
+            }
+            // ADD BY zhangxd on 20200309 END
 
             // 成功时
             if (responseTurnitinBean.getRetcode().equals("0000")) {
